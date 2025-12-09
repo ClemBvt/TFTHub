@@ -6,11 +6,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-//app.use('/api/fleurs', require('./routes/fleurs'));
+app.use('/champions', require('../routes/champion'));
 //app.use('/api/bouquets', require('./routes/bouquets'));
 
 app.get('/', (req, res) => {
-    res.send('Welcome to the TFTData');
+    res.send('Welcome to the TFT Hub');
 });
 
 module.exports = app; // utilisé par Jest
