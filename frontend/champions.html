@@ -104,5 +104,122 @@
         </div>
     </div>
   </div>
+
+  <script>
+    const API_BASE_URL = 'http://localhost:3000/champions';
+
+    // Get champion ID from URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const championId = urlParams.get('id');
+
+    // Load champion by ID if present in URL
+    if (championId) {
+        loadChampionById(championId);
+    }
+
+    async function loadChampionById(id) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/${id}`);
+            
+            if (!response.ok) {
+                throw new Error('Champion not found');
+            }
+
+            const champion = await response.json();
+            renderChampion(champion);
+        } catch (error) {
+            console.error('Error loading champion:', error);
+            showError('Erreur lors du chargement du champion');
+        }
+    }
+
+    function renderChampion(data) {
+        // Clear error
+        hideError();
+
+        // Portrait
+        document.getElementById('portrait').textContent = data.name.charAt(0).toUpperCase();
+
+        // Basic info
+        document.getElementById('costPill').textContent = `Coût: ${data.cost || '—'}`;
+        document.getElementById('classCount').textContent = `Classes: ${data.class ? data.class.length : 0}`;
+        document.getElementById('nameVal').textContent = data.name || '—';
+        document.getElementById('damageVal').textContent = data.damage || '—';
+        document.getElementById('asVal').textContent = data.attackSpeed || '—';
+        document.getElementById('dpsVal').textContent = data.dps || '—';
+
+        // Classes
+        const classesWrap = document.getElementById('classesWrap');
+        classesWrap.innerHTML = '';
+        if (data.class && Array.isArray(data.class)) {
+            data.class.forEach(className => {
+                const badge = document.createElement('div');
+                badge.className = 'class-badge';
+                badge.textContent = className;
+                classesWrap.appendChild(badge);
+            });
+        }
+
+        // Stats
+        const stats = {
+            health: data.health || 0,
+            mana: data.mana || 0,
+            armor: data.armor || 0,
+            magicResist: data.magicResist || 0,
+            damage: data.damage || 0,
+            attackSpeed: data.attackSpeed || 0,
+        };
+
+        // Find max values for scaling
+        const maxHealth = Math.max(stats.health, 1000);
+        const maxMana = Math.max(stats.mana, 100);
+        const maxArmor = Math.max(stats.armor, 100);
+        const maxMR = Math.max(stats.magicResist, 100);
+        const maxDamage = Math.max(stats.damage, 100);
+        const maxAS = Math.max(stats.attackSpeed, 2);
+
+        // Update stats display
+        document.getElementById('healthVal').textContent = stats.health;
+        document.getElementById('healthBar').style.width = (stats.health / maxHealth * 100) + '%';
+
+        document.getElementById('manaVal').textContent = stats.mana;
+        document.getElementById('manaBar').style.width = (stats.mana / maxMana * 100) + '%';
+
+        document.getElementById('armorVal').textContent = stats.armor;
+        document.getElementById('armorBar').style.width = (stats.armor / maxArmor * 100) + '%';
+
+        document.getElementById('mrVal').textContent = stats.magicResist;
+        document.getElementById('mrBar').style.width = (stats.magicResist / maxMR * 100) + '%';
+
+        document.getElementById('damageVal2').textContent = stats.damage;
+        document.getElementById('damageBar').style.width = (stats.damage / maxDamage * 100) + '%';
+
+        document.getElementById('asVal2').textContent = stats.attackSpeed.toFixed(2);
+        document.getElementById('asBar').style.width = (stats.attackSpeed / maxAS * 100) + '%';
+
+        document.getElementById('costVal').textContent = data.cost || '—';
+        document.getElementById('dpsVal2').textContent = data.dps || '—';
+    }
+
+    function showError(message) {
+        // Create error element if it doesn't exist
+        let errorEl = document.getElementById('error');
+        if (!errorEl) {
+            errorEl = document.createElement('div');
+            errorEl.id = 'error';
+            errorEl.className = 'error';
+            document.body.appendChild(errorEl);
+        }
+        errorEl.textContent = message;
+        errorEl.style.display = 'block';
+    }
+
+    function hideError() {
+        let errorEl = document.getElementById('error');
+        if (errorEl) {
+            errorEl.style.display = 'none';
+        }
+    }
+  </script>
 </body>
 </html>

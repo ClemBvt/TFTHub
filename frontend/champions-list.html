@@ -37,5 +37,91 @@
             Erreur lors du chargement des champions. Veuillez rafraîchir la page.
         </div>
     </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3000/champions';
+        const championsGrid = document.getElementById('championsGrid');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const errorMessage = document.getElementById('errorMessage');
+
+        async function loadChampions() {
+            try {
+                const response = await fetch(API_BASE_URL);
+                
+                if (!response.ok) {
+                    throw new Error('Erreur lors du chargement des champions');
+                }
+
+                const champions = await response.json();
+                
+                if (champions.length === 0) {
+                    championsGrid.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #9fb0d6; padding: 40px;">Aucun champion trouvé. <a href="create.html" style="color: #0ea5a4; text-decoration: none;">Créez-en un!</a></p>';
+                } else {
+                    championsGrid.innerHTML = '';
+                    champions.forEach(champion => {
+                        const card = createChampionCard(champion);
+                        championsGrid.appendChild(card);
+                    });
+                }
+
+                loadingMessage.style.display = 'none';
+            } catch (error) {
+                console.error('Erreur:', error);
+                loadingMessage.style.display = 'none';
+                errorMessage.style.display = 'block';
+            }
+        }
+
+        function createChampionCard(champion) {
+            const card = document.createElement('div');
+            card.className = 'champion-card';
+            card.style.cursor = 'pointer';
+
+            const costBadge = `<span class="cost-badge">${champion.cost}★</span>`;
+            const classNames = champion.class && champion.class.length > 0 
+                ? champion.class.join(', ') 
+                : 'N/A';
+
+            card.innerHTML = `
+                <div class="champion-card-portrait">${champion.name.charAt(0).toUpperCase()}</div>
+                <div class="champion-card-content">
+                    <div class="champion-card-header">
+                        <h3>${champion.name}</h3>
+                        ${costBadge}
+                    </div>
+                    <div class="champion-card-stats">
+                        <div class="stat-mini">
+                            <span class="stat-label">Santé</span>
+                            <span class="stat-value">${champion.health || '—'}</span>
+                        </div>
+                        <div class="stat-mini">
+                            <span class="stat-label">Dégâts</span>
+                            <span class="stat-value">${champion.damage || '—'}</span>
+                        </div>
+                        <div class="stat-mini">
+                            <span class="stat-label">Armure</span>
+                            <span class="stat-value">${champion.armor || '—'}</span>
+                        </div>
+                        <div class="stat-mini">
+                            <span class="stat-label">DPS</span>
+                            <span class="stat-value">${champion.dps || '—'}</span>
+                        </div>
+                    </div>
+                    <div class="champion-card-footer">
+                        <span class="view-details">Voir les détails →</span>
+                    </div>
+                </div>
+            `;
+
+            card.addEventListener('click', () => {
+                window.location.href = `champions.html?id=${champion._id}`;
+            });
+
+            return card;
+        }
+
+        // Load champions on page load
+        loadChampions();
+    </script>
 </body>
 </html>

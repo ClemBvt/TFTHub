@@ -4,7 +4,12 @@ const path = require('path');
 const Champion = require('../models/Champion');
 
 router.get('/', async (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend', 'champions.html'));
+    try {
+        const champions = await Champion.find();
+        res.status(200).json(champions);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
 });
 
 router.get('/create', (req, res) => {
