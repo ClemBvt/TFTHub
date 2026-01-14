@@ -780,3 +780,75 @@ button.secondary {
         grid-template-columns: 1fr;
     }
 }
+
+#toastContainer {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.toast {
+    background-color: #28a745;
+    color: white;
+    padding: 12px 22px;
+    border-radius: 6px;
+    font-size: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    opacity: 0;
+    transform: translateY(20px);
+    animation: slideIn 0.4s forwards, fadeOut 0.4s 4.6s forwards;
+    min-width: 200px;
+    text-align: center;
+}
+
+.toast.error {
+    background-color: #dc3545;
+}
+
+/* =========================
+   Champion Actions (Edit/Delete)
+   ========================= */
+.champion-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.btn-edit,
+.btn-delete {
+    flex: 1;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.btn-edit {
+    background: linear-gradient(135deg, #0ea5a4 0%, #0d9596 100%);
+    color: #042027;
+}
+
+.btn-edit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(14, 165, 164, 0.4);
+}
+
+.btn-delete {
+    background: transparent;
+    color: #dc2626;
+    border: 2px solid #dc2626;
+}
+
+.btn-delete:hover {
+    background: rgba(220, 38, 38, 0.1);
+    transform: translateY(-2px);
+}

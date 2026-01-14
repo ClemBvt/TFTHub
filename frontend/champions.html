@@ -22,7 +22,10 @@
         <h1>TFT Hub — Visualiseur Champion</h1>
         <p>Affiche les propriétés d'un champion (Nom, Coût, Vie, Mana, Résistance, Dégâts par seconde, Vitesse d'attaque, Résistance Magique, Dommage, Classe).</p>
       </div>
-      <div class="muted"></div>
+      <div id="actionButtons" class="champion-actions" style="display: none;">
+        <button class="btn-edit" onclick="editChampion()"><i class="fas fa-edit"></i> Modifier</button>
+        <button class="btn-delete" onclick="deleteChampion()"><i class="fas fa-trash"></i> Supprimer</button>
+      </div>
     </header>
 
     <div class="content">
@@ -107,6 +110,7 @@
 
   <script>
     const API_BASE_URL = 'http://localhost:3000/champions';
+    let currentChampionId = null;
 
     // Get champion ID from URL parameter
     const urlParams = new URLSearchParams(window.location.search);
@@ -114,12 +118,13 @@
 
     // Load champion by ID if present in URL
     if (championId) {
+        currentChampionId = championId;
         loadChampionById(championId);
     }
 
     async function loadChampionById(id) {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/${id}`);
+            const response = await fetch(`http://localhost:3000/champions/${id}`);
             
             if (!response.ok) {
                 throw new Error('Champion not found');
@@ -127,9 +132,11 @@
 
             const champion = await response.json();
             renderChampion(champion);
+            document.getElementById('actionButtons').style.display = 'flex';
         } catch (error) {
             console.error('Error loading champion:', error);
             showError('Erreur lors du chargement du champion');
+            document.getElementById('actionButtons').style.display = 'none';
         }
     }
 
@@ -201,6 +208,62 @@
         document.getElementById('dpsVal2').textContent = data.dps || '—';
     }
 
+    function editChampion() {
+        if (currentChampionId) {
+            // Redirect to an edit page or form
+            window.location.href = `edit.html?id=${currentChampionId}`;
+        }
+    }
+
+    async function deleteChampion() {
+        if (!currentChampionId) return;
+
+        const confirmed = confirm('Êtes-vous sûr de vouloir supprimer ce champion ? Cette action est irréversible.');
+        
+        if (!confirmed) return;
+
+        try {
+            const response = await fetch(`http://localhost:3000/champions/${currentChampionId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Erreur lors de la suppression');
+            }
+
+            // Show success message
+            const successMsg = document.createElement('div');
+            successMsg.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+                color: white;
+                padding: 40px;
+                border-radius: 12px;
+                box-shadow: 0 8px 32px rgba(220, 38, 38, 0.4);
+                z-index: 10000;
+                text-align: center;
+                font-size: 18px;
+                font-weight: 600;
+                max-width: 400px;
+            `;
+            successMsg.innerHTML = '<i class="fas fa-check-circle" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>Champion supprimé avec succès !';
+            document.body.appendChild(successMsg);
+
+            setTimeout(() => {
+                window.location.href = 'champions-list.html';
+            }, 1500);
+        } catch (error) {
+            console.error('Error deleting champion:', error);
+            showError('Erreur lors de la suppression du champion');
+        }
+    }
+
     function showError(message) {
         // Create error element if it doesn't exist
         let errorEl = document.getElementById('error');
@@ -212,6 +275,18 @@
         }
         errorEl.textContent = message;
         errorEl.style.display = 'block';
+    }
+
+    function showSuccess(message) {
+        let successEl = document.getElementById('success');
+        if (!successEl) {
+            successEl = document.createElement('div');
+            successEl.id = 'success';
+            successEl.style.cssText = 'background: #0ea5a4; color: white; padding: 12px; border-radius: 8px; margin-top: 16px; text-align: center;';
+            document.body.appendChild(successEl);
+        }
+        successEl.textContent = message;
+        successEl.style.display = 'block';
     }
 
     function hideError() {

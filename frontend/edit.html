@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Créer un champion - TFT Hub</title>
+    <title>Modifier un champion - TFT Hub</title>
     <link rel="stylesheet" href="/styles/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
     <nav class="site-nav">
@@ -21,12 +22,17 @@
 
     <div class="create-container">
         <div class="create-header">
-            <h2>Créer un nouveau champion</h2>
-            <a href="champions.html" class="back-btn">← Retour</a>
+            <h2>Modifier le champion</h2>
+            <a href="#" onclick="goBack()" class="back-btn">← Retour</a>
         </div>
 
-        <div class="form-card">
-            <form id="createChampionForm">
+        <div id="loadingMessage" style="text-align: center; color: #9fb0d6; padding: 20px;">
+            <i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i>
+            Chargement du champion...
+        </div>
+
+        <div class="form-card" id="formCard" style="display: none;">
+            <form id="editChampionForm">
                 <div class="form-group">
                     <label for="name">Nom du champion *</label>
                     <input type="text" id="name" name="name" placeholder="Ex: Ashe" required>
@@ -76,21 +82,61 @@
                     </div>
                 </div>
 
-                <!-- <div class="form-group">
-                    <label for="class">IDs des classes (séparés par des virgules) *</label>
-                    <input type="text" id="class" name="class" placeholder="Ex: 507f1f77bcf86cd799439011, 507f1f77bcf86cd799439012" required>
-                </div> -->
-
                 <div class="form-actions">
-                    <button type="submit" class="btn-submit">Créer le champion</button>
-                    <button type="button" class="btn-cancel" onclick="window.location.href='champions.html'">Annuler</button>
+                    <button type="submit" class="btn-submit"><i class="fas fa-save"></i> Enregistrer les modifications</button>
+                    <button type="button" class="btn-cancel" onclick="goBack()">Annuler</button>
                 </div>
             </form>
         </div>
     </div>
+
     <script>
         const API_BASE_URL = 'http://localhost:3000/champions';
-        const form = document.getElementById('createChampionForm');
+        const form = document.getElementById('editChampionForm');
+        const formCard = document.getElementById('formCard');
+        const loadingMessage = document.getElementById('loadingMessage');
+        let currentChampionId = null;
+
+        // Get champion ID from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const championId = urlParams.get('id');
+
+        if (championId) {
+            currentChampionId = championId;
+            loadChampion(championId);
+        } else {
+            loadingMessage.innerHTML = '<p style="color: #dc2626;">Erreur: ID du champion non spécifié.</p>';
+        }
+
+        async function loadChampion(id) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/${id}`);
+                
+                if (!response.ok) {
+                    throw new Error('Champion not found');
+                }
+
+                const champion = await response.json();
+                populateForm(champion);
+                loadingMessage.style.display = 'none';
+                formCard.style.display = 'block';
+            } catch (error) {
+                console.error('Error loading champion:', error);
+                loadingMessage.innerHTML = '<p style="color: #dc2626;">Erreur lors du chargement du champion.</p>';
+            }
+        }
+
+        function populateForm(champion) {
+            document.getElementById('name').value = champion.name || '';
+            document.getElementById('cost').value = champion.cost || '';
+            document.getElementById('health').value = champion.health || '';
+            document.getElementById('mana').value = champion.mana || '';
+            document.getElementById('armor').value = champion.armor || '';
+            document.getElementById('dps').value = champion.dps || '';
+            document.getElementById('attackSpeed').value = champion.attackSpeed || '';
+            document.getElementById('magicResist').value = champion.magicResist || '';
+            document.getElementById('damage').value = champion.damage || '';
+        }
 
         function showToast(message, type = "success") {
             const container = document.getElementById("toastContainer");
@@ -105,10 +151,23 @@
             setTimeout(() => {
                 toast.remove();
             }, 5000);
-    }
+        }
+
+        function goBack() {
+            if (currentChampionId) {
+                window.location.href = `champions.html?id=${currentChampionId}`;
+            } else {
+                window.location.href = 'champions-list.html';
+            }
+        }
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+
+            if (!currentChampionId) {
+                showToast('Erreur: ID du champion non disponible', 'error');
+                return;
+            }
 
             const data = {
                 name: String(document.getElementById('name').value),
@@ -123,8 +182,8 @@
             };
 
             try {
-                const response = await fetch(API_BASE_URL, {
-                    method: 'POST',
+                const response = await fetch(`${API_BASE_URL}/${currentChampionId}`, {
+                    method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
@@ -150,18 +209,17 @@
                         font-weight: 600;
                         max-width: 400px;
                     `;
-                    successMsg.innerHTML = '<i class="fas fa-check-circle" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>Champion créé avec succès !';
+                    successMsg.innerHTML = '<i class="fas fa-check-circle" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>Champion modifié avec succès !';
                     document.body.appendChild(successMsg);
                     
-                    showToast('Champion créé avec succès !', 'success');
                     setTimeout(() => {
-                        window.location.href = 'champions-list.html';
+                        window.location.href = `champions.html?id=${currentChampionId}`;
                     }, 1500);
                 } else {
-                    showToast('Erreur : ' + (result.error || 'Impossible de créer le champion.'), 'error');
+                    showToast('Erreur : ' + (result.error || 'Impossible de modifier le champion.'), 'error');
                 }
             } catch (error) {
-                console.error('Erreur création champion :', error);
+                console.error('Erreur modification champion :', error);
                 showToast('Erreur lors de la communication avec le serveur.', 'error');
             }
         });
